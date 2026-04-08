@@ -59,4 +59,51 @@ async function startShlomi() {
     }
   });
 
-  sock.ev.on("messages.upsert", a
+  sock.ev.on("messages.upsert", async ({ messages, type }) => {
+    if (type !== "notify") return;
+
+    const msg = messages[0];
+    if (!msg.message) return;
+    if (msg.key.fromMe) return;
+
+    // התעלם מהודעות קבוצה
+    if (msg.key.remoteJid.endsWith("@g.us")) return;
+
+    const userId = msg.key.remoteJid;
+    const userText =
+      msg.message.conversation ||
+      msg.message.extendedTextMessage?.text ||
+      "";
+
+    if (!userText.trim()) return;
+
+    console.log(`📩 הודעה מ-${userId}: ${userText}`);
+
+    // פקודת איפוס
+    if (userText === "איפוס" || userText === "/reset") {
+      delete chats[userId];
+      await sock.sendMessage(userId, { text: "🔄 השיחה אופסה! מה אפשר לעשות בשבילך?" });
+      return;
+    }
+
+    // פקודת עזרה
+    if (userText === "עזרה" || userText === "/help") {
+      await sock.sendMessage(userId, {
+        text: "👋 שלום! אני שלומי, העוזר האישי שלך.\n\n✅ שאל אותי כל שאלה\n✅ אני זוכר את השיחה שלנו\n\n📌 פקודות:\n• איפוס — מתחיל שיחה חדשה\n• עזרה — מציג את ההודעה הזו",
+      });
+      return;
+    }
+
+    try {
+      await sock.sendPresenceUpdate("composing", userId);
+      const reply = await askShlomi(userId, userText);
+      await sock.sendMessage(userId, { text: reply });
+      console.log(`📤 תשובה נשלחה`);
+    } catch (err) {
+      console.error("שגיאה:", err);
+      await sock.sendMessage(userId, { text: "אופס, משהו השתבש. נסה שוב." });
+    }
+  });
+}
+
+startShlomi();
