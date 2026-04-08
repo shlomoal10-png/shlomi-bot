@@ -1,5 +1,4 @@
-globalThis.crypto = require("crypto").webcrypto;
-const makeWASocket = require("@whiskeysockets/baileys").default;...const makeWASocket = require("@whiskeysockets/baileys").default;
+const makeWASocket = require("@whiskeysockets/baileys").default;
 const { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
 const { Boom } = require("@hapi/boom");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
